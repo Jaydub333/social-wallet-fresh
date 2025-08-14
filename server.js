@@ -147,12 +147,47 @@ const server = http.createServer(async (req, res) => {
 
     if (path === '/api/users' && method === 'POST') {
       const body = await parseBody(req);
+      
+      // Validation
+      if (!body.displayName || !body.username || !body.email) {
+        res.writeHead(400);
+        res.end(JSON.stringify({
+          success: false,
+          error: 'Display name, username, and email are required'
+        }));
+        return;
+      }
+      
+      // Check if username already exists
+      const existingUser = database.users.find(u => u.username.toLowerCase() === body.username.toLowerCase());
+      if (existingUser) {
+        res.writeHead(409);
+        res.end(JSON.stringify({
+          success: false,
+          error: 'Username already taken. Please choose another.'
+        }));
+        return;
+      }
+      
+      // Check if email already exists
+      const existingEmail = database.users.find(u => u.email.toLowerCase() === body.email.toLowerCase());
+      if (existingEmail) {
+        res.writeHead(409);
+        res.end(JSON.stringify({
+          success: false,
+          error: 'Email already registered. Please use another email.'
+        }));
+        return;
+      }
+      
       const newUser = {
         id: generateId('user'),
-        username: body.username || `user_${Date.now()}`,
-        displayName: body.displayName || 'New User',
-        email: body.email || '',
+        username: body.username,
+        displayName: body.displayName,
+        email: body.email,
         bio: body.bio || '',
+        location: body.location || '',
+        website: body.website || '',
         profileImage: body.profileImage || null,
         createdAt: new Date().toISOString(),
         verified: false
@@ -164,7 +199,18 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify({
         success: true,
         message: 'User created successfully',
-        user: newUser
+        user: {
+          id: newUser.id,
+          username: newUser.username,
+          displayName: newUser.displayName,
+          email: newUser.email,
+          bio: newUser.bio,
+          location: newUser.location,
+          website: newUser.website,
+          profileImage: newUser.profileImage,
+          verified: newUser.verified,
+          createdAt: newUser.createdAt
+        }
       }));
       return;
     }

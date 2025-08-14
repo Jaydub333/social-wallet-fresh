@@ -1,0 +1,33 @@
+# DigitalOcean App Platform Configuration
+name: social-wallet-api
+
+services:
+- name: api
+  source_dir: /
+  github:
+    repo: Jaydub333/social-wallet-fresh
+    branch: main
+    deploy_on_push: true
+  
+  run_command: node server.js
+  build_command: echo "No build needed"
+  
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  
+  http_port: 3000
+  
+  health_check:
+    http_path: /health
+    initial_delay_seconds: 10
+    period_seconds: 10
+    timeout_seconds: 5
+    success_threshold: 1
+    failure_threshold: 3
+  
+  env:
+  - key: NODE_ENV
+    value: production
+  - key: PORT
+    value: "3000"
